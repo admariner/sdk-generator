@@ -13,6 +13,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Setup binfmt with QEMU
         run: | 
+          sudo apt update
           sudo apt install qemu binfmt-support qemu-user-static
           update-binfmts --display
       - name: Setup ldid
@@ -32,7 +33,7 @@ jobs:
           npm run mac-arm64
       - name: Publish NPM library
         run: |
-          if ${{ contains(github.event.release.tag_name, '-RC') }}; then
+          if ${{ contains(github.event.release.tag_name, '-rc') }}; then
             echo "Publishing Release Candidate ${{ github.event.release.tag_name}} to NPM"
             npm publish --tag next
           else

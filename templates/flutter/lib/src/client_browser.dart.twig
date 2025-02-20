@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/browser_client.dart';
-import 'package:universal_html/html.dart' as html;
+import 'package:web/web.dart' as web;
 import 'client_mixin.dart';
 import 'enums.dart';
 import 'exception.dart';
@@ -98,10 +98,18 @@ class ClientBrowser extends ClientBase with ClientMixin {
     return this;
   }
 
+  @override
+  Future<String> ping() async {
+    final String apiPath = '/ping';
+    final response = await call(HttpMethod.get, path: apiPath, responseType: ResponseType.plain);
+
+    return response.data;
+  }
+
   Future init() async {
-    if (html.window.localStorage.keys.contains('cookieFallback')) {
-      addHeader('x-fallback-cookies',
-          html.window.localStorage['cookieFallback'] ?? '');
+    final cookieFallback = web.window.localStorage['cookieFallback'];
+    if (cookieFallback != null) {
+      addHeader('x-fallback-cookies', cookieFallback);
     }
     _httpClient.withCredentials = true;
   }
@@ -134,7 +142,7 @@ class ClientBrowser extends ClientBase with ClientMixin {
     }
 
     var offset = 0;
-    if (idParamName.isNotEmpty && params[idParamName] != 'unique()') {
+    if (idParamName.isNotEmpty) {
       //make a request to check if a file already exists
       try {
         res = await call(
@@ -148,7 +156,7 @@ class ClientBrowser extends ClientBase with ClientMixin {
     }
 
     while (offset < size) {
-      var chunk;
+      List<int> chunk = [];
       final end = min(offset + CHUNK_SIZE, size);
       chunk = file.bytes!.getRange(offset, end).toList();
       params[paramName] =
@@ -199,7 +207,7 @@ class ClientBrowser extends ClientBase with ClientMixin {
         debugPrint(
             '{{spec.title | caseUcfirst}} is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
         addHeader('X-Fallback-Cookies', cookieFallback);
-        html.window.localStorage['cookieFallback'] = cookieFallback;
+        web.window.localStorage['cookieFallback'] = cookieFallback;
       }
       return prepareResponse(res, responseType: responseType);
     } catch (e) {
