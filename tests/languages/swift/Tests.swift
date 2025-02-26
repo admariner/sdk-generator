@@ -19,10 +19,19 @@ class Tests: XCTestCase {
     }
 
     func test() async throws {
+        do {
         let client = Client()
-            .setProject("console")
+            .setProject("123456")
             .addHeader(key: "Origin", value: "http://localhost")
             .setSelfSigned()
+
+        // Ping pong test
+        let ping = try await client.ping()
+        let pingResult = parse(from: ping)!
+        print(pingResult)
+
+        // reset project
+        client.setProject("console")
 
         let foo = Foo(client)
         let bar = Bar(client)
@@ -48,19 +57,19 @@ class Tests: XCTestCase {
 
 
         // Bar Tests
-        mock = try await bar.get(xrequired: "string", xdefault: 123, z: ["string in array"])
+        mock = try await bar.get(required: "string", default: 123, z: ["string in array"])
         print(mock.result)
 
-        mock = try await bar.post(xrequired: "string", xdefault: 123, z: ["string in array"])
+        mock = try await bar.post(required: "string", default: 123, z: ["string in array"])
         print(mock.result)
 
-        mock = try await bar.put(xrequired: "string", xdefault: 123, z: ["string in array"])
+        mock = try await bar.put(required: "string", default: 123, z: ["string in array"])
         print(mock.result)
 
-        mock = try await bar.patch(xrequired: "string", xdefault: 123, z: ["string in array"])
+        mock = try await bar.patch(required: "string", default: 123, z: ["string in array"])
         print(mock.result)
 
-        mock = try await bar.delete(xrequired: "string", xdefault: 123, z: ["string in array"])
+        mock = try await bar.delete(required: "string", default: 123, z: ["string in array"])
         print(mock.result)
 
 
@@ -104,6 +113,9 @@ class Tests: XCTestCase {
             print(error.localizedDescription)
         }
 
+        mock = try await general.xenum(mockType: .first)
+        print(mock.result)
+
         do {
             try await general.error400()
         } catch {
@@ -123,6 +135,15 @@ class Tests: XCTestCase {
         }
 
         try! await general.empty()
+
+        let url = try? await general.oauth2(
+            clientId: "clientId",
+            scopes: ["test"],
+            state: "123456",
+            success: "https://localhost",
+            failure: "https://localhost"
+        )
+        print(url!)
 
         // Query helper tests
         print(Query.equal("released", value: [true]))
@@ -145,6 +166,14 @@ class Tests: XCTestCase {
         print(Query.cursorBefore("my_movie_id"))
         print(Query.limit(50))
         print(Query.offset(20))
+        print(Query.contains("title", value: "Spider"))
+        print(Query.contains("labels", value: "first"))
+        print(Query.or(
+            [Query.equal("released", value: true), Query.lessThan("releasedYear", value: 1990)]
+        ))
+        print(Query.and(
+            [Query.equal("released", value: false), Query.greaterThan("releasedYear", value: 2015)]
+        ))
 
         // Permission & Role helper tests
         print(Permission.read(Role.any()))
@@ -164,5 +193,17 @@ class Tests: XCTestCase {
 
         mock = try await general.headers()
         print(mock.result)
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+
+    func parse(from json: String) -> String? {
+        if let data = json.data(using: .utf8),
+           let jsonObject = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+           let result = jsonObject["result"] as? String {
+            return result
+        }
+        return nil
     }
 }

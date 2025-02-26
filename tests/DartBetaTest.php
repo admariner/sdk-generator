@@ -19,11 +19,14 @@ class DartBetaTest extends Base
         'docker run --network="mockapi" --rm -v $(pwd):/app -w /app/tests/sdks/dart dart:beta sh -c "dart pub get && dart pub run tests/tests.dart"';
 
     protected array $expectedOutput = [
+        ...Base::PING_RESPONSE,
         ...Base::FOO_RESPONSES,
         ...Base::BAR_RESPONSES,
         ...Base::GENERAL_RESPONSES,
-        ...Base::LARGE_FILE_RESPONSES,
+        ...Base::UPLOAD_RESPONSES,
+        ...Base::ENUM_RESPONSES,
         ...Base::EXCEPTION_RESPONSES,
+        ...Base::OAUTH_RESPONSES,
         ...Base::QUERY_HELPER_RESPONSES,
         ...Base::PERMISSION_HELPER_RESPONSES,
         ...Base::ID_HELPER_RESPONSES

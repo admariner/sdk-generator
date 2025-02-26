@@ -78,6 +78,22 @@ class ClientBrowser extends ClientBase with ClientMixin {
   }
 
   @override
+  Future<String> ping() async {
+    final String apiPath = '/ping';
+    final response = await call(HttpMethod.get, path: apiPath, responseType: ResponseType.plain);
+
+    return response.data;
+  }
+
+  @override
+  Future<String?> webAuth(Uri url) async {
+    final request = http.Request('GET', url);
+    request.followRedirects = false;
+    final response = await _httpClient.send(request);
+    return response.headers['location'];
+  }
+
+  @override
   Future<Response> chunkedUpload({
     required String path,
     required Map<String, dynamic> params,
@@ -105,7 +121,7 @@ class ClientBrowser extends ClientBase with ClientMixin {
     }
 
     var offset = 0;
-    if (idParamName.isNotEmpty && params[idParamName] != 'unique()') {
+    if (idParamName.isNotEmpty) {
       //make a request to check if a file already exists
       try {
         res = await call(
@@ -119,7 +135,7 @@ class ClientBrowser extends ClientBase with ClientMixin {
     }
 
     while (offset < size) {
-      var chunk;
+      List<int> chunk = [];
       final end = min(offset + CHUNK_SIZE, size);
       chunk = file.bytes!.getRange(offset, end).toList();
       params[paramName] =
